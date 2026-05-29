@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kallibr Training — Google Ads Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --teal: #009f9c;
+    --teal-dark: #007a78;
+    --teal-light: #e6f7f7;
+    --teal-mid: #b3e8e7;
+    --dark: #0f1923;
+    --dark2: #1a2636;
+    --mid: #2d3f50;
+    --slate: #4a5f72;
+    --muted: #7a90a3;
+    --border: #dde4ea;
+    --bg: #f4f7fa;
+    --white: #ffffff;
+    --green: #10b981;
+    --green-bg: #d1fae5;
+    --amber: #f59e0b;
+    --amber-bg: #fef3c7;
+    --red: #ef4444;
+    --red-bg: #fee2e2;
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--dark); min-height: 100vh; }
+
+  /* HEADER */
+  .header {
+    background: var(--dark);
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 70px;
+    border-bottom: 3px solid var(--teal);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-mark {
+    width: 38px; height: 38px; background: var(--teal);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 20px; color: white; font-weight: 700;
+  }
+  .header-title { font-family: var(--font-display); font-size: 20px; color: white; letter-spacing: -0.3px; }
+  .header-sub { font-size: 11px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 1px; }
+  .header-right { font-size: 11px; color: var(--muted); text-align: right; }
+  .header-right strong { color: var(--teal); display: block; font-size: 12px; }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    background: #fffbeb; border-bottom: 1px solid #fde68a;
+    padding: 10px 40px; display: flex; align-items: flex-start; gap: 10px;
+  }
+  .disclaimer-icon { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+  .disclaimer p { font-size: 12px; color: #92400e; line-height: 1.5; }
+  .disclaimer strong { color: #78350f; }
+
+  /* TABS */
+  .tab-bar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 40px; display: flex; gap: 0; }
+  .tab {
+    padding: 16px 24px; font-size: 13px; font-weight: 600; color: var(--muted);
+    cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
+    letter-spacing: 0.2px; white-space: nowrap;
+  }
+  .tab:hover { color: var(--teal); }
+  .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+  /* CONTENT */
+  .tab-content { display: none; padding: 36px 40px; max-width: 1400px; margin: 0 auto; }
+  .tab-content.active { display: block; }
+
+  /* SECTION LABELS */
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .section { margin-bottom: 36px; }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
+  .kpi-card {
+    background: var(--white); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 16px; cursor: default; transition: all 0.2s; position: relative;
+    overflow: hidden;
+  }
+  .kpi-card:hover { border-color: var(--teal); box-shadow: 0 4px 20px rgba(0,159,156,0.12); transform: translateY(-1px); }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--teal); opacity: 0; transition: opacity 0.2s; }
+  .kpi-card:hover::before { opacity: 1; }
+  .kpi-label { font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .kpi-value { font-family: var(--font-display); font-size: 26px; color: var(--dark); letter-spacing: -0.5px; line-height: 1; }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .kpi-tooltip {
+    display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: var(--dark); color: white; font-size: 11px; line-height: 1.5;
+    padding: 10px 14px; border-radius: 8px; width: 220px; z-index: 50;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+  .kpi-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--dark); }
+  .kpi-card:hover .kpi-tooltip { display: block; }
+
+  /* CPA BADGE */
+  .cpa-green { color: var(--green) !important; }
+  .cpa-amber { color: var(--amber) !important; }
+  .cpa-red { color: var(--red) !important; }
+
+  /* CAMPAIGN TABLE */
+  .table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: var(--dark); }
+  thead th { padding: 13px 16px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+  thead th:not(:first-child) { text-align: right; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; cursor: default; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--teal-light); }
+  tbody td { padding: 13px 16px; color: var(--dark); }
+  tbody td:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 700; padding: 3px 8px;
+    border-radius: 4px; letter-spacing: 0.5px;
+  }
+  .badge-limited { background: var(--amber-bg); color: #92400e; }
+  .badge-active { background: var(--green-bg); color: #065f46; }
+  .badge-poor { background: var(--red-bg); color: #991b1b; }
+  .campaign-name { font-weight: 600; }
+  .campaign-state { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px; margin-right: 6px; }
+  .state-qld { background: #fef9c3; color: #713f12; }
+  .state-nsw { background: #dbeafe; color: #1e3a8a; }
+  .state-vic { background: #f3e8ff; color: #581c87; }
+  .state-display { background: #f0fdf4; color: #14532d; }
+
+  /* COURSE CARDS */
+  .course-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .course-card {
+    background: var(--white); border: 1.5px solid var(--border); border-radius: 14px;
+    overflow: hidden; cursor: pointer; transition: all 0.2s;
+  }
+  .course-card:hover { border-color: var(--teal); box-shadow: 0 6px 24px rgba(0,159,156,0.15); transform: translateY(-2px); }
+  .course-card.expanded { border-color: var(--teal); box-shadow: 0 6px 24px rgba(0,159,156,0.15); }
+  .course-header { padding: 18px 20px; background: var(--dark); }
+  .course-name { font-family: var(--font-display); font-size: 22px; color: white; margin-bottom: 2px; }
+  .course-spend { font-size: 13px; color: var(--teal); font-weight: 700; }
+  .course-meta { display: flex; gap: 12px; margin-top: 10px; }
+  .course-meta-item { }
+  .course-meta-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+  .course-meta-val { font-size: 15px; font-weight: 700; color: white; }
+  .course-body { padding: 16px 20px; }
+  .state-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px;
+  }
+  .state-row:last-child { border-bottom: none; }
+  .state-name { font-weight: 700; font-size: 11px; width: 35px; }
+  .state-bar-wrap { flex: 1; margin: 0 10px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .state-bar { height: 100%; background: var(--teal); border-radius: 3px; transition: width 0.6s ease; }
+  .state-stats { display: flex; gap: 10px; font-size: 11px; color: var(--muted); }
+  .state-cpa { font-weight: 700; font-size: 12px; }
+  .course-expand { padding: 12px 20px; background: var(--teal-light); font-size: 11px; color: var(--teal); font-weight: 700; letter-spacing: 0.5px; text-align: center; }
+  .course-detail { display: none; padding: 16px 20px; background: var(--bg); border-top: 1px solid var(--border); }
+  .course-detail.show { display: block; }
+  .detail-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-label { color: var(--muted); }
+  .detail-val { font-weight: 600; }
+
+  /* CHARTS */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .chart-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+  .chart-title { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+  .chart-sub { font-size: 11px; color: var(--muted); margin-bottom: 20px; }
+  .chart-wrap { position: relative; height: 260px; }
+
+  /* OVERVIEW SPECIFIC */
+  .overview-kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
+  .month-kpi-block { background: var(--white); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .month-kpi-header { padding: 14px 20px; background: var(--dark); display: flex; justify-content: space-between; align-items: center; }
+  .month-kpi-title { font-family: var(--font-display); font-size: 18px; color: white; }
+  .month-kpi-spend { font-size: 20px; font-weight: 700; color: var(--teal); }
+  .month-kpi-body { padding: 16px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .month-kpi-item { }
+  .month-kpi-item-label { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .month-kpi-item-val { font-size: 18px; font-weight: 700; color: var(--dark); }
+
+  /* COMPARISON TABLE */
+  .comparison-table { background: var(--white); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  .comp-thead tr { background: var(--dark); }
+  .comp-thead th { padding: 12px 16px; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+  .comp-thead th:not(:first-child) { text-align: center; }
+  .comp-tbody td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .comp-tbody tr:last-child td { border-bottom: none; }
+  .comp-tbody tr:hover td { background: var(--teal-light); }
+  .comp-tbody td:not(:first-child) { text-align: center; }
+  .trend-up { color: var(--red); font-weight: 700; }
+  .trend-down { color: var(--green); font-weight: 700; }
+  .trend-flat { color: var(--muted); font-weight: 700; }
+
+  /* INSIGHT BOX */
+  .insight-box { background: linear-gradient(135deg, var(--dark) 0%, var(--dark2) 100%); border-radius: 12px; padding: 24px 28px; margin-bottom: 24px; border-left: 4px solid var(--teal); }
+  .insight-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); margin-bottom: 12px; }
+  .insight-items { display: flex; flex-direction: column; gap: 8px; }
+  .insight-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.5; }
+  .insight-bullet { color: var(--teal); font-size: 16px; line-height: 1.3; flex-shrink: 0; }
+
+  /* TOOLTIP HOVER ON METRIC HEADER */
+  .th-wrap { position: relative; display: inline-block; cursor: help; }
+  .th-tip {
+    display: none; position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: var(--dark); color: white; font-size: 11px; line-height: 1.5;
+    padding: 10px 14px; border-radius: 8px; width: 200px; z-index: 200;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3); font-weight: 400; text-transform: none; letter-spacing: 0;
+  }
+  .th-wrap:hover .th-tip { display: block; }
+
+  /* AD PREVIEW STYLES */
+.ad-filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.filter-btn { padding: 8px 18px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--white); font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.15s; font-family: var(--font-body); }
+.filter-btn:hover { border-color: var(--teal); color: var(--teal); }
+.filter-btn.active { background: var(--teal); border-color: var(--teal); color: white; }
+.ad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+.ad-card { background: var(--white); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; transition: all 0.2s; }
+.ad-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.1); transform: translateY(-2px); }
+.ad-card[data-hidden="true"] { display: none; }
+.ad-mock { background: var(--white); border: 1px solid #dadce0; border-radius: 8px; padding: 14px 16px; margin: 16px; font-family: Arial, sans-serif; }
+.ad-badge { display: inline-block; background: #006621; color: white; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 3px; margin-right: 6px; letter-spacing: 0.3px; }
+.ad-url { font-size: 12px; color: #202124; line-height: 1.4; }
+.ad-url-path { color: #5f6368; }
+.ad-headline { font-size: 18px; color: #1a0dab; line-height: 1.3; margin: 4px 0 6px; font-weight: 400; }
+.ad-headline span { color: #1a0dab; }
+.ad-desc { font-size: 13px; color: #3c4043; line-height: 1.5; }
+.ad-desc strong { font-weight: 600; }
+.ad-meta { padding: 12px 16px; background: var(--bg); border-top: 1px solid var(--border); }
+.ad-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ad-meta-row:last-child { margin-bottom: 0; }
+.ad-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; }
+.ad-tag-course { background: var(--teal-light); color: var(--teal-dark); }
+.ad-tag-state-qld { background: #fef9c3; color: #713f12; }
+.ad-tag-state-nsw { background: #dbeafe; color: #1e3a8a; }
+.ad-tag-state-vic { background: #f3e8ff; color: #581c87; }
+.ad-tag-state-all { background: #f0fdf4; color: #14532d; }
+.ad-insight { padding: 10px 16px 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--slate); line-height: 1.6; }
+.ad-insight .insight-flag { font-weight: 700; margin-right: 4px; }
+.ad-insight .flag-good { color: var(--green); }
+.ad-insight .flag-warn { color: var(--red); }
+.ad-insight .flag-note { color: var(--amber); }
+.headline-pills { display: flex; flex-wrap: wrap; gap: 5px; padding: 10px 16px 0; }
+.headline-pill { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 11px; color: #475569; padding: 3px 10px; }
+.ad-section-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; padding: 0 16px 6px; margin-top: 10px; }
+.obs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 28px; }
+.obs-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; border-left: 4px solid var(--border); }
+.obs-card.warn { border-left-color: var(--red); }
+.obs-card.good { border-left-color: var(--green); }
+.obs-card.note { border-left-color: var(--amber); }
+.obs-title { font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+.obs-body { font-size: 12px; color: var(--slate); line-height: 1.6; }
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    .course-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid { grid-template-columns: 1fr; }
+    .overview-kpi-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .header { padding: 0 20px; }
+    .tab-content { padding: 24px 20px; }
+    .tab-bar { padding: 0 20px; overflow-x: auto; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .course-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ANIMATION */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .tab-content.active { animation: fadeIn 0.3s ease; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">K</div>
+    <div>
+      <div class="header-title">Google Ads Performance Dashboard</div>
+      <div class="header-sub">Kallibr Training · Account 934-266-0049</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <strong>March – May 2026</strong>
+    Report Period · 3 Months
+  </div>
+</div>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  <div class="disclaimer-icon">⚠️</div>
+  <p><strong>Important — Understanding Conversions:</strong> The conversion figures in this report primarily reflect <strong>phone calls made directly from ads (60 sec+ duration)</strong>, which account for ~40–50% of recorded conversions. The remainder are mixed digital interactions due to current tracking limitations. <strong>Actual course bookings from aXcelerate are not yet captured.</strong> A conversion tracking cleanup is in progress. Treat CPA figures as directional performance indicators, not absolute cost-per-booking values.</p>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('overview')">📊 Overview (Mar–May)</div>
+  <div class="tab" onclick="switchTab('march')">March 2026</div>
+  <div class="tab" onclick="switchTab('april')">April 2026</div>
+  <div class="tab" onclick="switchTab('may')">May 2026</div>
+  <div class="tab" onclick="switchTab('ads')">🎯 Ad Creative</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- OVERVIEW TAB -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="tab-overview" class="tab-content active">
+
+  <!-- Insight Box -->
+  <div class="insight-box">
+    <div class="insight-title">Executive Summary — 3-Month View</div>
+    <div class="insight-items">
+      <div class="insight-item"><span class="insight-bullet">↘</span> Total ad spend declined from <strong>$30,533 in March to $24,145 in May</strong> — a 21% reduction, likely due to budget adjustments and search volume fluctuation.</div>
+      <div class="insight-item"><span class="insight-bullet">⚠</span> <strong>NSW Rigging & Dogging</strong> campaign is a persistent haemorrhage — <strong>$278 CPA in March, $361 in April, $423 in May</strong>. Getting worse every month. $13,386 spent across 3 months at 3–4× target CPA. Immediate review required.</div>
+      <div class="insight-item"><span class="insight-bullet">✦</span> <strong>VIC Rigging & Dogging</strong> is consistently the strongest performer — $59 CPA with solid conversion volume. This market is underinvested at $100/day budget.</div>
+      <div class="insight-item"><span class="insight-bullet">✦</span> <strong>CSQ (QLD funded training)</strong> improved CPA from $66 in March to $101 in May while growing spend — volume scaling but efficiency tightening.</div>
+      <div class="insight-item"><span class="insight-bullet">↘</span> <strong>NSW Dogging</strong> went from $264 CPA in March to $545 in April, then dropped to near-zero conversions in May with $574 still spent. Structural issue.</div>
+    </div>
+  </div>
+
+  <!-- 3-Month KPI Blocks -->
+  <div class="section">
+    <div class="section-label">Account Performance by Month</div>
+    <div class="overview-kpi-grid">
+      <div class="month-kpi-block">
+        <div class="month-kpi-header">
+          <div class="month-kpi-title">March 2026</div>
+          <div class="month-kpi-spend">$30,532.57</div>
+        </div>
+        <div class="month-kpi-body">
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Impressions</div><div class="month-kpi-item-val">85,357</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Clicks</div><div class="month-kpi-item-val">5,498</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Conversions</div><div class="month-kpi-item-val">284.25</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Avg CPA</div><div class="month-kpi-item-val cpa-amber">$107.42</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Avg CPC</div><div class="month-kpi-item-val">$5.55</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">CTR</div><div class="month-kpi-item-val">6.44%</div></div>
+        </div>
+      </div>
+      <div class="month-kpi-block">
+        <div class="month-kpi-header">
+          <div class="month-kpi-title">April 2026</div>
+          <div class="month-kpi-spend">$26,910.68</div>
+        </div>
+        <div class="month-kpi-body">
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Impressions</div><div class="month-kpi-item-val">165,926</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Clicks</div><div class="month-kpi-item-val">4,682</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Conversions</div><div class="month-kpi-item-val">259.56</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Avg CPA</div><div class="month-kpi-item-val cpa-amber">$103.68</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Avg CPC</div><div class="month-kpi-item-val">$5.75</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">CTR</div><div class="month-kpi-item-val">2.82%</div></div>
+        </div>
+      </div>
+      <div class="month-kpi-block">
+        <div class="month-kpi-header">
+          <div class="month-kpi-title">May 2026</div>
+          <div class="month-kpi-spend">$24,144.87</div>
+        </div>
+        <div class="month-kpi-body">
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Impressions</div><div class="month-kpi-item-val">154,334</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Clicks</div><div class="month-kpi-item-val">4,513</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Conversions</div><div class="month-kpi-item-val">224.15</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Avg CPA</div><div class="month-kpi-item-val cpa-amber">$107.72</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">Avg CPC</div><div class="month-kpi-item-val">$5.35</div></div>
+          <div class="month-kpi-item"><div class="month-kpi-item-label">CTR</div><div class="month-kpi-item-val">2.92%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Charts -->
+  <div class="section">
+    <div class="section-label">Course Performance Comparison</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Monthly Spend by Course</div>
+        <div class="chart-sub">How budget allocation shifted across March, April and May</div>
+        <div class="chart-wrap"><canvas id="chart-spend-comparison"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">CPA Trend by Course</div>
+        <div class="chart-sub">Cost per conversion over 3 months — lower is better. Target: under $100</div>
+        <div class="chart-wrap"><canvas id="chart-cpa-trend"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Master Comparison Table -->
+  <div class="section">
+    <div class="section-label">Course-Level 3-Month Comparison</div>
+    <div class="comparison-table">
+      <table>
+        <thead class="comp-thead">
+          <tr>
+            <th>Course</th>
+            <th>Mar Spend</th><th>Mar Conv</th><th>Mar CPA</th>
+            <th>Apr Spend</th><th>Apr Conv</th><th>Apr CPA</th>
+            <th>May Spend</th><th>May Conv</th><th>May CPA</th>
+            <th>CPA Trend</th>
+          </tr>
+        </thead>
+        <tbody class="comp-tbody">
+          <tr>
+            <td><strong>Forklift</strong></td>
+            <td>$2,838</td><td>25.0</td><td class="cpa-amber">$114</td>
+            <td>$3,268</td><td>36.4</td><td class="cpa-green">$90</td>
+            <td>$4,129</td><td>35.7</td><td class="cpa-amber">$116</td>
+            <td><span class="trend-up">↗ Worsening</span></td>
+          </tr>
+          <tr>
+            <td><strong>Dogging</strong></td>
+            <td>$7,142</td><td>51.2</td><td class="cpa-amber">$140</td>
+            <td>$5,184</td><td>37.4</td><td class="cpa-amber">$139</td>
+            <td>$2,583</td><td>25.8</td><td class="cpa-green">$100</td>
+            <td><span class="trend-down">↘ Improving</span></td>
+          </tr>
+          <tr>
+            <td><strong>Rigging</strong></td>
+            <td>$4,664</td><td>40.3</td><td class="cpa-amber">$116</td>
+            <td>$4,867</td><td>44.2</td><td class="cpa-amber">$110</td>
+            <td>$6,362</td><td>62.7</td><td class="cpa-amber">$101</td>
+            <td><span class="trend-down">↘ Improving</span></td>
+          </tr>
+          <tr>
+            <td><strong>CSQ</strong></td>
+            <td>$931</td><td>14.1</td><td class="cpa-green">$66</td>
+            <td>$1,312</td><td>13.0</td><td class="cpa-amber">$101</td>
+            <td>$1,783</td><td>17.7</td><td class="cpa-amber">$101</td>
+            <td><span class="trend-up">↗ Scaling cost</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- NSW Warning Chart -->
+  <div class="section">
+    <div class="section-label">NSW Problem Campaigns — CPA by Month</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">NSW vs VIC — Dogging CPA</div>
+        <div class="chart-sub">NSW Dogging has been 4–8× more expensive than VIC for the same course. Structural issue requiring investigation.</div>
+        <div class="chart-wrap"><canvas id="chart-nsw-vic-dogging"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Total Account Spend & Conversions</div>
+        <div class="chart-sub">Spend is declining month-on-month while conversion volume follows. CPA remains relatively stable around $104–$108.</div>
+        <div class="chart-wrap"><canvas id="chart-account-trend"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- MARCH TAB -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="tab-march" class="tab-content">
+  <div class="insight-box">
+    <div class="insight-title">March 2026 — Key Insights</div>
+    <div class="insight-items">
+      <div class="insight-item"><span class="insight-bullet">⚠</span> Highest spend month at <strong>$30,533</strong>. NSW Rigging & Dogging campaign alone consumed <strong>$5,724</strong> — 18.7% of total budget — for only 20.59 conversions at <strong>$278 CPA</strong>. Worst campaign in the account this month.</div>
+      <div class="insight-item"><span class="insight-bullet">✦</span> VIC Rigging & Dogging was the standout campaign: <strong>$69 CPA</strong> with 50.42 conversions from $3,476 spend — the best performing campaign in the entire 3-month period.</div>
+      <div class="insight-item"><span class="insight-bullet">✦</span> CSQ achieved its best-ever CPA of <strong>$66</strong> in March — strong intent signal from QLD government-funded learners. Only $931 spend; significant headroom to scale.</div>
+      <div class="insight-item"><span class="insight-bullet">↘</span> VIC Courses had no Forklift ads running in March — $0 spend on Forklift in Victoria. A market left entirely uncontested when it later proved to be the most efficient state for Forklift in April ($27 CPA).</div>
+      <div class="insight-item"><span class="insight-bullet">📞</span> <strong>154 phone calls</strong> recorded directly from ads in March — the highest of the 3 months. These are the most reliable conversion signals in the account.</div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Account KPIs — March 2026</div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Total Spend</div><div class="kpi-value">$30,533</div><div class="kpi-sub">Full month (31 days)</div><div class="kpi-tooltip">The total amount spent across all Google Ads campaigns in March 2026. This is your actual media investment — what Google charged to serve your ads.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Impressions</div><div class="kpi-value">85,357</div><div class="kpi-sub">Times ads were shown</div><div class="kpi-tooltip">How many times your ads appeared on Google search results. An impression occurs each time your ad is displayed — it doesn't mean the person clicked or even noticed it.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Clicks</div><div class="kpi-value">5,498</div><div class="kpi-sub">Visits to your site</div><div class="kpi-tooltip">The number of times someone clicked your ad and was directed to your website or called directly. Each click costs money based on your bid.</div></div>
+      <div class="kpi-card"><div class="kpi-label">CTR</div><div class="kpi-value">6.44%</div><div class="kpi-sub">Industry avg ~4–6%</div><div class="kpi-tooltip">Click-Through Rate — the percentage of people who saw your ad and clicked it. 6.44% is above industry average, indicating your ad copy is relevant and compelling to searchers.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg CPC</div><div class="kpi-value">$5.55</div><div class="kpi-sub">Per click cost</div><div class="kpi-tooltip">Average Cost Per Click — what you paid on average each time someone clicked your ad. This is determined by your bids and competition from other advertisers.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversions</div><div class="kpi-value">284.25</div><div class="kpi-sub">~40–50% phone calls</div><div class="kpi-tooltip">Tracked actions after a click — primarily phone calls directly from ads (60 sec+ minimum). See disclaimer above for full breakdown of what's included and excluded.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg CPA</div><div class="kpi-value cpa-amber">$107.42</div><div class="kpi-sub">Cost per conversion</div><div class="kpi-tooltip">Cost Per Acquisition — total spend divided by total conversions. $107 means every tracked conversion cost $107 in ad spend. Target should be under $100 once real booking data is tracked.</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">All Campaigns — March 2026</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><div class="th-wrap">Campaign<div class="th-tip">The name of each Google Ads campaign. Campaigns are organised by state (QLD/NSW/VIC) and course type (HIGH value / LOW value / Rigging & Dogging).</div></div></th>
+            <th><div class="th-wrap">Budget/Day<div class="th-tip">The daily budget cap set for this campaign. Once this is reached, ads stop showing for the rest of the day — causing lost opportunities.</div></div></th>
+            <th><div class="th-wrap">Spend<div class="th-tip">Actual amount spent in March. May be lower than budget × 31 days if campaigns were paused, limited by search volume, or budget was recently changed.</div></div></th>
+            <th><div class="th-wrap">Impressions<div class="th-tip">How many times ads in this campaign were shown to searchers in March.</div></div></th>
+            <th><div class="th-wrap">Clicks<div class="th-tip">How many people clicked through from this campaign's ads.</div></div></th>
+            <th><div class="th-wrap">CTR<div class="th-tip">Click-Through Rate for this campaign. Higher CTR means the ads are highly relevant to the searches triggering them.</div></div></th>
+            <th><div class="th-wrap">Conv.<div class="th-tip">Conversions attributed to this campaign — primarily phone calls from ads and some mixed digital signals. See disclaimer.</div></div></th>
+            <th><div class="th-wrap">CPA<div class="th-tip">Cost Per Conversion for this campaign. Green = under $100, Amber = $100–150, Red = over $150.</div></div></th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="campaign-name"><span class="campaign-state state-qld">QLD</span>Courses High</td><td>$320</td><td>$6,642.86</td><td>18,356</td><td>1,337</td><td>7.28%</td><td>65.15</td><td class="cpa-amber">$102</td><td><span class="badge badge-limited">Limited + Disapproved</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-nsw">NSW</span>Courses High</td><td>$160</td><td>$4,832.09</td><td>13,220</td><td>1,131</td><td>8.56%</td><td>41.41</td><td class="cpa-amber">$117</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-nsw">NSW</span>Rigging & Dogging</td><td>$149</td><td>$5,723.81</td><td>9,513</td><td>602</td><td>6.33%</td><td>20.59</td><td class="cpa-red">$278</td><td><span class="badge badge-poor">Poor CPA</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-qld">QLD</span>Courses Low</td><td>$130</td><td>$3,249.84</td><td>6,189</td><td>514</td><td>8.31%</td><td>40.58</td><td class="cpa-green">$80</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-vic">VIC</span>Rigging & Dogging</td><td>$100</td><td>$3,476.02</td><td>8,243</td><td>674</td><td>8.18%</td><td>50.42</td><td class="cpa-green">$69</td><td><span class="badge badge-active">Active</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-qld">QLD</span>Rigging & Dogging</td><td>$200</td><td>$2,606.62</td><td>5,157</td><td>374</td><td>7.25%</td><td>20.42</td><td class="cpa-amber">$128</td><td><span class="badge badge-active">Active</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-nsw">NSW</span>Courses Low</td><td>$85</td><td>$1,887.27</td><td>5,780</td><td>359</td><td>6.21%</td><td>21.00</td><td class="cpa-green">$90</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-vic">VIC</span>Courses</td><td>$50</td><td>$1,692.43</td><td>3,412</td><td>281</td><td>8.24%</td><td>18.69</td><td class="cpa-green">$91</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-display">DISPLAY</span>Remarketing</td><td>$20</td><td>$420.21</td><td>15,010</td><td>225</td><td>1.50%</td><td>6.00</td><td class="cpa-green">$70</td><td><span class="badge badge-active">Active</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Course Breakdown — Click to Expand Detail</div>
+    <div class="course-grid">
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">Forklift</div><div class="course-spend">$2,838.27 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">25.0</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val">$114</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:42%"></div></div><div class="state-stats"><span>$1,201</span><span>8 conv</span></div><div class="state-cpa cpa-red">$150</div></div>
+          <div class="state-row"><div class="state-name" style="color:#1e3a8a">NSW</div><div class="state-bar-wrap"><div class="state-bar" style="width:58%"></div></div><div class="state-stats"><span>$1,637</span><span>17 conv</span></div><div class="state-cpa cpa-green">$96</div></div>
+          <div class="state-row"><div class="state-name" style="color:#581c87">VIC</div><div class="state-bar-wrap"><div class="state-bar" style="width:0%"></div></div><div class="state-stats"><span>$0</span><span>0 conv</span></div><div class="state-cpa" style="color:#9ca3af">N/A</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">Total Impressions</span><span class="detail-val">10,250</span></div>
+          <div class="detail-row"><span class="detail-label">Total Clicks</span><span class="detail-val">641</span></div>
+          <div class="detail-row"><span class="detail-label">Avg CTR</span><span class="detail-val">6.25%</span></div>
+          <div class="detail-row"><span class="detail-label">VIC Status</span><span class="detail-val" style="color:#ef4444">Not active in March — missed market</span></div>
+          <div class="detail-row"><span class="detail-label">Best State</span><span class="detail-val" style="color:#10b981">NSW at $96 CPA</span></div>
+          <div class="detail-row"><span class="detail-label">Action Required</span><span class="detail-val">Activate VIC Forklift, reduce QLD bids</span></div>
+        </div>
+      </div>
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">Dogging</div><div class="course-spend">$7,142.43 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">51.17</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val">$140</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#581c87">VIC</div><div class="state-bar-wrap"><div class="state-bar" style="width:30%"></div></div><div class="state-stats"><span>$2,122</span><span>30.6 conv</span></div><div class="state-cpa cpa-green">$69</div></div>
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:13%"></div></div><div class="state-stats"><span>$902</span><span>5 conv</span></div><div class="state-cpa cpa-red">$180</div></div>
+          <div class="state-row"><div class="state-name" style="color:#1e3a8a">NSW</div><div class="state-bar-wrap"><div class="state-bar" style="width:58%"></div></div><div class="state-stats"><span>$4,118</span><span>15.6 conv</span></div><div class="state-cpa cpa-red">$264</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">NSW Share of Spend</span><span class="detail-val" style="color:#ef4444">57.7% of Dogging budget</span></div>
+          <div class="detail-row"><span class="detail-label">NSW Return</span><span class="detail-val" style="color:#ef4444">$264 CPA — 3.8× VIC's efficiency</span></div>
+          <div class="detail-row"><span class="detail-label">VIC Performance</span><span class="detail-val" style="color:#10b981">Best in class at $69 CPA, underfunded</span></div>
+          <div class="detail-row"><span class="detail-label">Action Required</span><span class="detail-val">Reduce NSW Dogging budget immediately</span></div>
+        </div>
+      </div>
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">Rigging</div><div class="course-spend">$4,664.01 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">40.26</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val">$116</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:37%"></div></div><div class="state-stats"><span>$1,704</span><span>15.4 conv</span></div><div class="state-cpa cpa-amber">$111</div></div>
+          <div class="state-row"><div class="state-name" style="color:#1e3a8a">NSW</div><div class="state-bar-wrap"><div class="state-bar" style="width:34%"></div></div><div class="state-stats"><span>$1,606</span><span>5 conv</span></div><div class="state-cpa cpa-red">$321</div></div>
+          <div class="state-row"><div class="state-name" style="color:#581c87">VIC</div><div class="state-bar-wrap"><div class="state-bar" style="width:29%"></div></div><div class="state-stats"><span>$1,354</span><span>19.8 conv</span></div><div class="state-cpa cpa-green">$68</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">VIC Rigging Basic CPA</span><span class="detail-val" style="color:#10b981">$68 — excellent</span></div>
+          <div class="detail-row"><span class="detail-label">NSW Rigging Basic CPA</span><span class="detail-val" style="color:#ef4444">$225 — very poor</span></div>
+          <div class="detail-row"><span class="detail-label">NSW Rigging Advanced</span><span class="detail-val" style="color:#ef4444">$673 CPA — 1 conversion for $672 spend</span></div>
+          <div class="detail-row"><span class="detail-label">Action Required</span><span class="detail-val">Pause NSW Rigging Advanced, cut NSW Rigging Basic bids</span></div>
+        </div>
+      </div>
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">CSQ</div><div class="course-spend">$931.17 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">14.07</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val" style="color:#10b981">$66</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:100%"></div></div><div class="state-stats"><span>$931</span><span>14.1 conv</span></div><div class="state-cpa cpa-green">$66</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">Impressions</span><span class="detail-val">3,850</span></div>
+          <div class="detail-row"><span class="detail-label">Clicks</span><span class="detail-val">264</span></div>
+          <div class="detail-row"><span class="detail-label">CTR</span><span class="detail-val">6.86%</span></div>
+          <div class="detail-row"><span class="detail-label">Best Month</span><span class="detail-val" style="color:#10b981">March — $66 CPA, best of 3 months</span></div>
+          <div class="detail-row"><span class="detail-label">Note</span><span class="detail-val">QLD-only — CSQ is a Queensland state funding program</span></div>
+          <div class="detail-row"><span class="detail-label">Opportunity</span><span class="detail-val">Increase budget — strong ROI signal</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Charts — March 2026</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Spend by Course & State</div>
+        <div class="chart-sub">How the March budget was distributed across courses and states</div>
+        <div class="chart-wrap"><canvas id="chart-march-spend"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">CPA by Course & State</div>
+        <div class="chart-sub">Green = under $100 target. Amber = $100–150. Red = above $150 — review required.</div>
+        <div class="chart-wrap"><canvas id="chart-march-cpa"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- APRIL TAB -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="tab-april" class="tab-content">
+  <div class="insight-box">
+    <div class="insight-title">April 2026 — Key Insights</div>
+    <div class="insight-items">
+      <div class="insight-item"><span class="insight-bullet">↘</span> Spend dropped to <strong>$26,911</strong> from March's $30,533 — a 12% reduction. Conversion volume fell proportionally, keeping blended CPA stable at <strong>$103.68</strong> — the best of the 3 months.</div>
+      <div class="insight-item"><span class="insight-bullet">⚠</span> NSW Rigging & Dogging worsened: <strong>$4,698 spent for 13 conversions = $361 CPA</strong>. Up from $278 in March. This campaign has now spent over $10,000 across two months at 3× the acceptable CPA threshold.</div>
+      <div class="insight-item"><span class="insight-bullet">✦</span> VIC Courses delivered its best month: <strong>$51 CPA</strong> from 21.7 conversions on $1,100 spend — driven largely by Forklift VIC at $27 CPA. Critically underfunded at $50/day.</div>
+      <div class="insight-item"><span class="insight-bullet">✦</span> QLD Courses High improved significantly to <strong>$92 CPA</strong> (vs $102 in March) with 71.65 conversions — the highest single-campaign conversion volume across all 3 months.</div>
+      <div class="insight-item"><span class="insight-bullet">📞</span> <strong>94 phone calls</strong> recorded directly from ads — down from 154 in March, consistent with lower overall spend.</div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Account KPIs — April 2026</div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Total Spend</div><div class="kpi-value">$26,911</div><div class="kpi-sub">↘ Down 12% vs March</div><div class="kpi-tooltip">Total ad spend for April 2026. Down from $30,533 in March — reflecting either budget reductions, fewer billable days, or seasonal search volume decline.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Impressions</div><div class="kpi-value">165,926</div><div class="kpi-sub">↗ Up vs March</div><div class="kpi-tooltip">Ad impressions nearly doubled vs March (85,357) due to Display Remarketing campaign volume — but search impressions were similar. Display inflates total impression count significantly.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Clicks</div><div class="kpi-value">4,682</div><div class="kpi-sub">↘ Down vs March</div><div class="kpi-tooltip">Total ad clicks in April. Down from 5,498 in March, consistent with the lower overall spend.</div></div>
+      <div class="kpi-card"><div class="kpi-label">CTR</div><div class="kpi-value">2.82%</div><div class="kpi-sub">Includes display (low CTR)</div><div class="kpi-tooltip">The lower CTR vs March (6.44%) is caused by Display Remarketing impressions being included in the total. Display ads typically have 0.1–0.3% CTR, which drags the blended average down. Search-only CTR remains ~7%.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg CPC</div><div class="kpi-value">$5.75</div><div class="kpi-sub">Slight increase vs March</div><div class="kpi-tooltip">Average cost per click rose slightly from $5.55 in March. This can indicate increased competition in the auction, or Smart Bidding adjusting bids upward based on conversion signals.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversions</div><div class="kpi-value">259.56</div><div class="kpi-sub">↘ Down vs March</div><div class="kpi-tooltip">Conversion volume fell from 284 in March. Proportional to the spend reduction — CPA stayed consistent, meaning efficiency didn't deteriorate overall, though NSW problem campaigns remain.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg CPA</div><div class="kpi-value cpa-amber">$103.68</div><div class="kpi-sub">Best month of 3</div><div class="kpi-tooltip">April had the best blended CPA across the three months at $103.68, largely due to strong VIC Forklift ($27) and VIC Dogging ($49) performance partially offsetting NSW's poor results.</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">All Campaigns — April 2026</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campaign</th><th>Budget/Day</th><th>Spend</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Conv.</th><th>CPA</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="campaign-name"><span class="campaign-state state-qld">QLD</span>Courses High</td><td>$320</td><td>$6,558.17</td><td>19,872</td><td>1,352</td><td>6.80%</td><td>71.65</td><td class="cpa-green">$92</td><td><span class="badge badge-limited">Limited + Disapproved</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-nsw">NSW</span>Courses High</td><td>$160</td><td>$4,145.18</td><td>7,451</td><td>617</td><td>8.28%</td><td>34.49</td><td class="cpa-amber">$120</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-nsw">NSW</span>Rigging & Dogging</td><td>$149</td><td>$4,698.24</td><td>6,082</td><td>440</td><td>7.23%</td><td>13.00</td><td class="cpa-red">$361</td><td><span class="badge badge-poor">Poor CPA</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-qld">QLD</span>Rigging & Dogging</td><td>$200</td><td>$3,159.02</td><td>5,883</td><td>410</td><td>6.97%</td><td>27.84</td><td class="cpa-amber">$113</td><td><span class="badge badge-active">Active</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-qld">QLD</span>Courses Low</td><td>$130</td><td>$2,860.21</td><td>5,424</td><td>461</td><td>8.50%</td><td>30.10</td><td class="cpa-green">$95</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-vic">VIC</span>Rigging & Dogging</td><td>$100</td><td>$2,193.93</td><td>5,349</td><td>475</td><td>8.88%</td><td>40.78</td><td class="cpa-green">$54</td><td><span class="badge badge-active">Active</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-nsw">NSW</span>Courses Low</td><td>$85</td><td>$1,756.42</td><td>5,464</td><td>354</td><td>6.48%</td><td>19.00</td><td class="cpa-green">$92</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-vic">VIC</span>Courses</td><td>$50</td><td>$1,100.12</td><td>3,374</td><td>249</td><td>7.38%</td><td>21.70</td><td class="cpa-green">$51</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-display">DISPLAY</span>Remarketing</td><td>$20</td><td>$439.39</td><td>107,027</td><td>324</td><td>0.30%</td><td>1.00</td><td class="cpa-red">$439</td><td><span class="badge badge-active">Active</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Course Breakdown — Click to Expand Detail</div>
+    <div class="course-grid">
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">Forklift</div><div class="course-spend">$3,267.67 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">36.39</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val">$90</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:64%"></div></div><div class="state-stats"><span>$2,108</span><span>16 conv</span></div><div class="state-cpa cpa-amber">$132</div></div>
+          <div class="state-row"><div class="state-name" style="color:#1e3a8a">NSW</div><div class="state-bar-wrap"><div class="state-bar" style="width:29%"></div></div><div class="state-stats"><span>$944</span><span>12.5 conv</span></div><div class="state-cpa cpa-green">$76</div></div>
+          <div class="state-row"><div class="state-name" style="color:#581c87">VIC</div><div class="state-bar-wrap"><div class="state-bar" style="width:7%"></div></div><div class="state-stats"><span>$216</span><span>7.9 conv</span></div><div class="state-cpa cpa-green" style="color:#065f46">$27</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">VIC Forklift CPA</span><span class="detail-val" style="color:#10b981">$27 — best CPA in the entire account</span></div>
+          <div class="detail-row"><span class="detail-label">VIC Forklift Budget</span><span class="detail-val" style="color:#ef4444">Critically underfunded at $50/day total for VIC</span></div>
+          <div class="detail-row"><span class="detail-label">Opportunity</span><span class="detail-val">Reallocate $50/day from NSW Dogging to VIC Courses</span></div>
+        </div>
+      </div>
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">Dogging</div><div class="course-spend">$5,183.77 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">37.38</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val">$139</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#581c87">VIC</div><div class="state-bar-wrap"><div class="state-bar" style="width:27%"></div></div><div class="state-stats"><span>$1,411</span><span>28.9 conv</span></div><div class="state-cpa cpa-green" style="color:#065f46">$49</div></div>
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:20%"></div></div><div class="state-stats"><span>$1,047</span><span>3.5 conv</span></div><div class="state-cpa cpa-red">$299</div></div>
+          <div class="state-row"><div class="state-name" style="color:#1e3a8a">NSW</div><div class="state-bar-wrap"><div class="state-bar" style="width:53%"></div></div><div class="state-stats"><span>$2,726</span><span>5 conv</span></div><div class="state-cpa cpa-red">$545</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">NSW Dogging waste</span><span class="detail-val" style="color:#ef4444">$2,726 for 5 conversions — $545/conversion</span></div>
+          <div class="detail-row"><span class="detail-label">VIC Dogging efficiency</span><span class="detail-val" style="color:#10b981">$49 CPA — 11× better than NSW</span></div>
+          <div class="detail-row"><span class="detail-label">If NSW budget went to VIC</span><span class="detail-val">~55 additional conversions at $49 CPA</span></div>
+          <div class="detail-row"><span class="detail-label">Action Required</span><span class="detail-val">Pause or severely cut NSW Dogging</span></div>
+        </div>
+      </div>
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">Rigging</div><div class="course-spend">$4,867.42 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">44.24</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val">$110</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:43%"></div></div><div class="state-stats"><span>$2,112</span><span>24.3 conv</span></div><div class="state-cpa cpa-green">$87</div></div>
+          <div class="state-row"><div class="state-name" style="color:#1e3a8a">NSW</div><div class="state-bar-wrap"><div class="state-bar" style="width:41%"></div></div><div class="state-stats"><span>$2,016</span><span>9 conv</span></div><div class="state-cpa cpa-red">$224</div></div>
+          <div class="state-row"><div class="state-name" style="color:#581c87">VIC</div><div class="state-bar-wrap"><div class="state-bar" style="width:16%"></div></div><div class="state-stats"><span>$782</span><span>11.9 conv</span></div><div class="state-cpa cpa-green">$66</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">QLD Rigging Basic CPA</span><span class="detail-val" style="color:#10b981">$78 — solid performer</span></div>
+          <div class="detail-row"><span class="detail-label">VIC High Risk Work CPA</span><span class="detail-val" style="color:#10b981">$14 — exceptional</span></div>
+          <div class="detail-row"><span class="detail-label">NSW High Risk Work CPA</span><span class="detail-val" style="color:#ef4444">$261 — needs review</span></div>
+        </div>
+      </div>
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">CSQ</div><div class="course-spend">$1,311.90 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">13.0</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val cpa-amber">$101</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:100%"></div></div><div class="state-stats"><span>$1,312</span><span>13 conv</span></div><div class="state-cpa cpa-amber">$101</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">Impressions</span><span class="detail-val">4,847</span></div>
+          <div class="detail-row"><span class="detail-label">Clicks</span><span class="detail-val">316</span></div>
+          <div class="detail-row"><span class="detail-label">CTR</span><span class="detail-val">6.52%</span></div>
+          <div class="detail-row"><span class="detail-label">vs March CPA</span><span class="detail-val" style="color:#f59e0b">$101 vs $66 in March — efficiency slipping</span></div>
+          <div class="detail-row"><span class="detail-label">Spend growth</span><span class="detail-val">+41% vs March ($931 → $1,312)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Charts — April 2026</div>
+    <div class="chart-grid">
+      <div class="chart-card"><div class="chart-title">Spend by Course & State</div><div class="chart-sub">Budget distribution across courses and states in April</div><div class="chart-wrap"><canvas id="chart-april-spend"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">CPA by Course & State</div><div class="chart-sub">Green = under $100. Amber = $100–150. Red = above $150.</div><div class="chart-wrap"><canvas id="chart-april-cpa"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- MAY TAB -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="tab-may" class="tab-content">
+  <div class="insight-box">
+    <div class="insight-title">May 2026 — Key Insights (May 1–29)</div>
+    <div class="insight-items">
+      <div class="insight-item"><span class="insight-bullet">↘</span> Spend fell to <strong>$24,145</strong> — lowest of the three months. May has 2 days remaining so final spend will be slightly higher.</div>
+      <div class="insight-item"><span class="insight-bullet">✦</span> Rigging had its best month: <strong>62.71 conversions at $101 CPA</strong>. VIC Rigging Basic achieved $41 CPA — remarkable efficiency for a high-intent course.</div>
+      <div class="insight-item"><span class="insight-bullet">↘</span> Dogging improved significantly — blended CPA dropped from $139 in April to <strong>$100 in May</strong>, driven by VIC ($67) and QLD ($94) performing well.</div>
+      <div class="insight-item"><span class="insight-bullet">⚠</span> NSW Dogging recorded <strong>zero conversions</strong> in May despite $574 spend. This is the third consecutive month of critically poor NSW Dogging performance.</div>
+      <div class="insight-item"><span class="insight-bullet">⚠</span> NSW High Risk Work Licences: <strong>$1,384 spent for 4 conversions = $346 CPA</strong>. Consistently one of the worst-performing ad groups in the account.</div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Account KPIs — May 2026</div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-label">Total Spend</div><div class="kpi-value">$24,145</div><div class="kpi-sub">↘ Down 10% vs April</div><div class="kpi-tooltip">Total spend for May 1–29, 2026. Two days remaining in the month — final spend will be slightly higher. Third consecutive month of declining spend.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Impressions</div><div class="kpi-value">154,334</div><div class="kpi-sub">Search + Display</div><div class="kpi-tooltip">Total impressions including Display Remarketing (94,039 of the total). Search-only impressions were approximately 60,295.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Clicks</div><div class="kpi-value">4,513</div><div class="kpi-sub">Slight decrease</div><div class="kpi-tooltip">Total clicks across all campaigns. Broadly in line with spend reduction — efficiency per click is consistent with prior months.</div></div>
+      <div class="kpi-card"><div class="kpi-label">CTR</div><div class="kpi-value">2.92%</div><div class="kpi-sub">Blended (display drags)</div><div class="kpi-tooltip">Blended CTR including Display Remarketing. Search-only CTR is approximately 7.2% — above industry average and consistent with prior months.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg CPC</div><div class="kpi-value">$5.35</div><div class="kpi-sub">↘ Lowest of 3 months</div><div class="kpi-tooltip">Average Cost Per Click fell to $5.35 — the lowest of the three months. This could indicate reduced competition in May auctions or Smart Bidding finding lower-cost opportunities.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Conversions</div><div class="kpi-value">224.15</div><div class="kpi-sub">↘ Month not complete</div><div class="kpi-tooltip">Conversion count to May 29. With 2 days remaining, final May conversions will be ~237–240. Primarily phone calls from ads (60 sec min) plus mixed digital signals.</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg CPA</div><div class="kpi-value cpa-amber">$107.72</div><div class="kpi-sub">Slight increase vs April</div><div class="kpi-tooltip">CPA ticked up slightly from April's $103.68 — NSW problem campaigns continue to drag the blended average up. Removing or fixing NSW Dogging and NSW Rigging would bring this under $90.</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">All Campaigns — May 2026</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campaign</th><th>Budget/Day</th><th>Spend</th><th>Impressions</th><th>Clicks</th><th>CTR</th><th>Conv.</th><th>CPA</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="campaign-name"><span class="campaign-state state-qld">QLD</span>Courses High</td><td>$320</td><td>$6,585.78</td><td>17,713</td><td>1,269</td><td>7.16%</td><td>57.6</td><td class="cpa-amber">$114</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-qld">QLD</span>Rigging & Dogging</td><td>$200</td><td>$4,010.39</td><td>8,513</td><td>550</td><td>6.46%</td><td>48.07</td><td class="cpa-green">$83</td><td><span class="badge badge-active">Active</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-nsw">NSW</span>Courses High</td><td>$160</td><td>$3,252.46</td><td>8,850</td><td>666</td><td>7.53%</td><td>23.0</td><td class="cpa-amber">$141</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-nsw">NSW</span>Rigging & Dogging</td><td>$149</td><td>$2,960.73</td><td>5,630</td><td>382</td><td>6.79%</td><td>7.0</td><td class="cpa-red">$423</td><td><span class="badge badge-poor">Poor CPA</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-qld">QLD</span>Courses Low</td><td>$130</td><td>$2,590.62</td><td>5,794</td><td>427</td><td>7.37%</td><td>28.25</td><td class="cpa-green">$92</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-vic">VIC</span>Rigging & Dogging</td><td>$100</td><td>$1,974.42</td><td>5,530</td><td>505</td><td>9.13%</td><td>33.46</td><td class="cpa-green">$59</td><td><span class="badge badge-active">Active</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-vic">VIC</span>Courses</td><td>$50</td><td>$1,032.66</td><td>2,839</td><td>247</td><td>8.70%</td><td>16.62</td><td class="cpa-green">$62</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-nsw">NSW</span>Courses Low</td><td>$85</td><td>$1,317.73</td><td>5,426</td><td>296</td><td>5.46%</td><td>10.16</td><td class="cpa-amber">$130</td><td><span class="badge badge-limited">Budget Limited</span></td></tr>
+          <tr><td class="campaign-name"><span class="campaign-state state-display">DISPLAY</span>Remarketing</td><td>$20</td><td>$420.08</td><td>94,039</td><td>171</td><td>0.18%</td><td>0</td><td>—</td><td><span class="badge badge-active">Active</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Course Breakdown — Click to Expand Detail</div>
+    <div class="course-grid">
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">Forklift</div><div class="course-spend">$4,128.89 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">35.71</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val">$116</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:59%"></div></div><div class="state-stats"><span>$2,443</span><span>23.1 conv</span></div><div class="state-cpa cpa-amber">$106</div></div>
+          <div class="state-row"><div class="state-name" style="color:#1e3a8a">NSW</div><div class="state-bar-wrap"><div class="state-bar" style="width:36%"></div></div><div class="state-stats"><span>$1,473</span><span>10 conv</span></div><div class="state-cpa cpa-amber">$147</div></div>
+          <div class="state-row"><div class="state-name" style="color:#581c87">VIC</div><div class="state-bar-wrap"><div class="state-bar" style="width:5%"></div></div><div class="state-stats"><span>$212</span><span>2.6 conv</span></div><div class="state-cpa cpa-green">$81</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">Total Impressions</span><span class="detail-val">12,644</span></div>
+          <div class="detail-row"><span class="detail-label">Total Clicks</span><span class="detail-val">788</span></div>
+          <div class="detail-row"><span class="detail-label">QLD Forklift - Course Code</span><span class="detail-val" style="color:#9ca3af">0 clicks, $0 spend — dead weight</span></div>
+          <div class="detail-row"><span class="detail-label">Spend trend</span><span class="detail-val" style="color:#f59e0b">+45% vs April — budget increasing</span></div>
+        </div>
+      </div>
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">Dogging</div><div class="course-spend">$2,583.37 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">25.82</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val cpa-amber">$100</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#581c87">VIC</div><div class="state-bar-wrap"><div class="state-bar" style="width:40%"></div></div><div class="state-stats"><span>$1,039</span><span>15.5 conv</span></div><div class="state-cpa cpa-green">$67</div></div>
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:38%"></div></div><div class="state-stats"><span>$971</span><span>10.3 conv</span></div><div class="state-cpa cpa-green">$94</div></div>
+          <div class="state-row"><div class="state-name" style="color:#1e3a8a">NSW</div><div class="state-bar-wrap"><div class="state-bar" style="width:22%"></div></div><div class="state-stats"><span>$574</span><span>0 conv</span></div><div class="state-cpa cpa-red">N/A</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">NSW Dogging</span><span class="detail-val" style="color:#ef4444">$574 spend, ZERO conversions in May</span></div>
+          <div class="detail-row"><span class="detail-label">3-month NSW Dogging total</span><span class="detail-val" style="color:#ef4444">$7,417 spent across 3 months</span></div>
+          <div class="detail-row"><span class="detail-label">Improving trend</span><span class="detail-val" style="color:#10b981">Blended CPA: $140 → $139 → $100</span></div>
+          <div class="detail-row"><span class="detail-label">Action</span><span class="detail-val">Pause NSW Dogging ad group immediately</span></div>
+        </div>
+      </div>
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">Rigging</div><div class="course-spend">$6,362.19 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">62.71</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val cpa-amber">$101</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:48%"></div></div><div class="state-stats"><span>$3,038</span><span>37.75 conv</span></div><div class="state-cpa cpa-green">$80</div></div>
+          <div class="state-row"><div class="state-name" style="color:#1e3a8a">NSW</div><div class="state-bar-wrap"><div class="state-bar" style="width:38%"></div></div><div class="state-stats"><span>$2,387</span><span>7 conv</span></div><div class="state-cpa cpa-red">$341</div></div>
+          <div class="state-row"><div class="state-name" style="color:#581c87">VIC</div><div class="state-bar-wrap"><div class="state-bar" style="width:15%"></div></div><div class="state-stats"><span>$936</span><span>17.96 conv</span></div><div class="state-cpa cpa-green">$52</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">VIC Rigging Basic CPA</span><span class="detail-val" style="color:#10b981">$41 — best Rigging performance ever</span></div>
+          <div class="detail-row"><span class="detail-label">QLD Rigging Basic CPA</span><span class="detail-val" style="color:#10b981">$74 — solid and improving</span></div>
+          <div class="detail-row"><span class="detail-label">NSW High Risk Work</span><span class="detail-val" style="color:#ef4444">$1,384 for 4 conv = $346 CPA</span></div>
+          <div class="detail-row"><span class="detail-label">NSW Rigging Basic</span><span class="detail-val" style="color:#ef4444">$886 for 3 conv = $295 CPA</span></div>
+          <div class="detail-row"><span class="detail-label">Best month overall</span><span class="detail-val" style="color:#10b981">62.71 conv — highest volume of 3 months</span></div>
+        </div>
+      </div>
+      <div class="course-card" onclick="toggleCourse(this)">
+        <div class="course-header"><div class="course-name">CSQ</div><div class="course-spend">$1,783.48 spent</div><div class="course-meta"><div class="course-meta-item"><div class="course-meta-label">Conversions</div><div class="course-meta-val">17.67</div></div><div class="course-meta-item"><div class="course-meta-label">Blended CPA</div><div class="course-meta-val cpa-amber">$101</div></div></div></div>
+        <div class="course-body">
+          <div class="state-row"><div class="state-name" style="color:#713f12">QLD</div><div class="state-bar-wrap"><div class="state-bar" style="width:100%"></div></div><div class="state-stats"><span>$1,783</span><span>17.67 conv</span></div><div class="state-cpa cpa-amber">$101</div></div>
+        </div>
+        <div class="course-expand">▼ VIEW FULL DETAIL</div>
+        <div class="course-detail">
+          <div class="detail-row"><span class="detail-label">Impressions</span><span class="detail-val">5,454</span></div>
+          <div class="detail-row"><span class="detail-label">Clicks</span><span class="detail-val">338</span></div>
+          <div class="detail-row"><span class="detail-label">CTR</span><span class="detail-val">6.20%</span></div>
+          <div class="detail-row"><span class="detail-label">Spend growth (3 months)</span><span class="detail-val">$931 → $1,312 → $1,783 (+91%)</span></div>
+          <div class="detail-row"><span class="detail-label">Conv growth (3 months)</span><span class="detail-val">14.07 → 13.0 → 17.67</span></div>
+          <div class="detail-row"><span class="detail-label">Note</span><span class="detail-val">Scaling well — CPA stabilising around $101</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Charts — May 2026</div>
+    <div class="chart-grid">
+      <div class="chart-card"><div class="chart-title">Spend by Course & State</div><div class="chart-sub">Budget distribution across courses and states in May</div><div class="chart-wrap"><canvas id="chart-may-spend"></canvas></div></div>
+      <div class="chart-card"><div class="chart-title">CPA by Course & State</div><div class="chart-sub">Green = under $100. Amber = $100–150. Red = above $150.</div><div class="chart-wrap"><canvas id="chart-may-cpa"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- ADS TAB -->
+<!-- ═══════════════════════════════════════════════ -->
+<div id="tab-ads" class="tab-content">
+
+  <div class="insight-box" style="margin-bottom:28px">
+    <div class="insight-title">What You're Looking At — Ad Creative Explained</div>
+    <div class="insight-items">
+      <div class="insight-item"><span class="insight-bullet">📱</span> These are <strong>Responsive Search Ads (RSAs)</strong> — Google's standard search ad format. Each ad contains up to 15 headlines and 4 descriptions. Google's AI mixes and matches combinations to find what performs best for each search query.</div>
+      <div class="insight-item"><span class="insight-bullet">🎯</span> What you see below is a <strong>representative preview</strong> of how each ad appears in Google search results — showing the URL, 3 headlines (Google picks which 3 to show), and 2 descriptions. The actual ad shown to any individual will vary.</div>
+      <div class="insight-item"><span class="insight-bullet">📊</span> This is the <strong>May 2026 ad inventory</strong>. There are 16 active search ads across Forklift, Dogging, Rigging and CSQ, plus display image ads for remarketing.</div>
+    </div>
+  </div>
+
+  <!-- Expert Observations -->
+  <div class="section">
+    <div class="section-label">Google Ads Expert Observations</div>
+    <div class="obs-grid">
+      <div class="obs-card warn">
+        <div class="obs-title" style="color:var(--red)">⚠ NSW Dogging Ad Is Weakest</div>
+        <div class="obs-body">The NSW Dogging ad opens with "Looking to get your dogging ticket? You are in the right place." — a generic opener used across multiple ads. The VIC version has location-specific, high-intent copy. This copy weakness may be contributing to NSW's zero-conversion result in May.</div>
+      </div>
+      <div class="obs-card warn">
+        <div class="obs-title" style="color:var(--red)">⚠ Generic HRWL Ad Across All States</div>
+        <div class="obs-body">One generic "High Risk Work Licence" RSA runs in NSW, QLD <em>and</em> VIC campaigns simultaneously. It has no state-specific headline. When someone in Melbourne searches "rigging course Melbourne," this ad shows no Melbourne-specific copy — reducing relevance and Quality Score.</div>
+      </div>
+      <div class="obs-card warn">
+        <div class="obs-title" style="color:var(--red)">⚠ "Customers Say..." Overused</div>
+        <div class="obs-body">"Customers Say 'Professional people, good trainers...'" appears as Description 3 in nearly every single ad. Google tests all description combinations — this repetition wastes a description slot and reduces variation Google can test. Replace half with specific proof points (5-star rating count, years operating, RTO number, job placement rates).</div>
+      </div>
+      <div class="obs-card good">
+        <div class="obs-title" style="color:var(--green)">✅ VIC Dogging Melbourne Ad — Best in Account</div>
+        <div class="obs-body">The VIC Dogging Melbourne ad has the strongest copy of all ads: location-specific ("Carrum Downs", "Melbourne"), course code prominent (CPCCLDG3001), hands-on claim, WorkSafe reference. This directly mirrors how a tradesperson searches. Correlates with VIC Dogging's $67 CPA — the best Dogging result.</div>
+      </div>
+      <div class="obs-card good">
+        <div class="obs-title" style="color:var(--green)">✅ CSQ Ad Well Structured</div>
+        <div class="obs-body">The CSQ ad correctly targets the funded-training search intent with headlines like "CSQ Funding Queensland", "Explore CSQ Funded Courses" and "Construction Skills Queensland." Landing page goes to /course-types/csq-courses/ which is correct. Clean and purpose-built.</div>
+      </div>
+      <div class="obs-card note">
+        <div class="obs-title" style="color:var(--amber)">⚡ Price in Rigging Intermediate Ad</div>
+        <div class="obs-body">The QLD Rigging Intermediate ad includes "Starts at $1686" as a headline. This is double-edged — it qualifies leads (only serious buyers proceed) but may reduce CTR. Worth A/B testing a version without the price to compare conversion quality vs volume.</div>
+      </div>
+      <div class="obs-card note">
+        <div class="obs-title" style="color:var(--amber)">⚡ "Reduced Prices" in VIC Dogging</div>
+        <div class="obs-body">One VIC Dogging variant includes "Reduced Prices" as a headline. This is a strong conversion lever but needs to be verified — if prices aren't actually reduced, this is misleading and risks policy violations. Confirm with the team whether this is accurate.</div>
+      </div>
+      <div class="obs-card note">
+        <div class="obs-title" style="color:var(--amber)">⚡ No Forklift NSW Evening Training Ad</div>
+        <div class="obs-body">Two NSW Forklift ads include "Evening Training Available" as a headline. However this is buried at headline position 11–12. If evening training is genuinely available and in demand, this should be a pinned Headline 1 or 2, not an optional rotation — it's a strong differentiator for working adults.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="section">
+    <div class="section-label">Ad Previews — May 2026</div>
+    <div class="ad-filter-bar">
+      <button class="filter-btn active" onclick="filterAds('all', this)">All Ads</button>
+      <button class="filter-btn" onclick="filterAds('Forklift', this)">🔑 Forklift</button>
+      <button class="filter-btn" onclick="filterAds('Dogging', this)">🔨 Dogging</button>
+      <button class="filter-btn" onclick="filterAds('Rigging', this)">⛓ Rigging</button>
+      <button class="filter-btn" onclick="filterAds('CSQ', this)">📋 CSQ</button>
+    </div>
+
+    <div class="ad-grid">
+
+      <!-- FORKLIFT ADS -->
+      <div class="ad-card" data-course="Forklift">
+        <div class="headline-pills">
+          <div class="headline-pill">Forklift Training</div><div class="headline-pill">Forklift Licence Brisbane</div><div class="headline-pill">3 Day Course</div><div class="headline-pill">Graduate Fully Qualified</div><div class="headline-pill">Nationally Recognised Training</div><div class="headline-pill">LF Licence</div><div class="headline-pill">Onsite Training Available</div><div class="headline-pill">TLILIC0003</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › forklift</span></span></div>
+          <div class="ad-headline">Forklift Training · Forklift Licence Course Bris. · 3 Day Course</div>
+          <div class="ad-desc">Setting the benchmark for excellence in safety, construction and high risk work training. Get your SafeWork Licence Today. 3 Day Course Operate any Forklift in Brisbane. Enrol Now.</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Forklift</span>
+            <span class="ad-tag ad-tag-state-qld">QLD · Brisbane</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-good">✓</span> Good state-specific headline (Brisbane). Course code TLILIC0003 adds credibility. Strong CTA on description 2.</div>
+      </div>
+
+      <div class="ad-card" data-course="Forklift">
+        <div class="headline-pills">
+          <div class="headline-pill">Forklift Licence & Training</div><div class="headline-pill">Kallibr Training Sydney</div><div class="headline-pill">NSW Forklift Training</div><div class="headline-pill">3 Day Course</div><div class="headline-pill">Evening Training Available</div><div class="headline-pill">Nationally Recognised Training</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › forklift</span></span></div>
+          <div class="ad-headline">Forklift Course · Kallibr Training Sydney · NSW Forklift Training</div>
+          <div class="ad-desc">Looking to get licensed to operate a forklift? You're in the right place. Get your SafeWork Licence Today. 3 Day Course Operate any Forklift in Sydney. Enrol Now.</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Forklift</span>
+            <span class="ad-tag ad-tag-state-nsw">NSW · Sydney</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-note">⚡</span> "Evening Training Available" buried at H13. This is a strong differentiator — should be pinned to H1 or H2 for working adults who can't train during the day.</div>
+      </div>
+
+      <div class="ad-card" data-course="Forklift">
+        <div class="headline-pills">
+          <div class="headline-pill">Forklift Course</div><div class="headline-pill">Kallibr Training Victoria</div><div class="headline-pill">VIC Forklift Training</div><div class="headline-pill">3 Day Course</div><div class="headline-pill">Forklift Licence Victoria</div><div class="headline-pill">Evening Training Available</div><div class="headline-pill">Graduate Fully Qualified</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › forklift</span></span></div>
+          <div class="ad-headline">Forklift Course · Kallibr Training Victoria · VIC Forklift Training</div>
+          <div class="ad-desc">Looking to get licensed to operate a forklift in Victoria? You're in the right place. Get your SafeWork Licence Today. 3 Day Course Operate any Forklift in Victoria. Enrol Now.</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Forklift</span>
+            <span class="ad-tag ad-tag-state-vic">VIC · Victoria</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-good">✓</span> VIC-specific across headline and description. Achieved $81 CPA in May despite small budget. "Evening Training Available" should be promoted further.</div>
+      </div>
+
+      <!-- DOGGING ADS -->
+      <div class="ad-card" data-course="Dogging">
+        <div class="headline-pills">
+          <div class="headline-pill">Dogman Course Melbourne</div><div class="headline-pill">Dogging DG Licence Training</div><div class="headline-pill">Get Your Dogman Licence VIC</div><div class="headline-pill">CPCCLDG3001</div><div class="headline-pill">Melbourne Dogman Training</div><div class="headline-pill">Fast Track Your Dogman Ticket</div><div class="headline-pill">Train with Industry Experts</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › dogging-dg-licence</span></span></div>
+          <div class="ad-headline">Dogman Course Melbourne · Dogging DG Licence Training · CPCCLDG3001</div>
+          <div class="ad-desc">Nationally recognised Dogging training with real hands-on crane & slinging practice. Enrol in a 5-day Dogman License in Melbourne. Get your CPCCLDG3001 Dogging Licence.</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Dogging</span>
+            <span class="ad-tag ad-tag-state-vic">VIC · Melbourne (Best)</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-good">✓ Best ad in account.</span> Highly specific: location (Melbourne), course code (CPCCLDG3001), hands-on claim, WorkSafe reference. This specificity directly mirrors how tradespeople search. Correlates with VIC Dogging's $67 CPA — the best result.</div>
+      </div>
+
+      <div class="ad-card" data-course="Dogging">
+        <div class="headline-pills">
+          <div class="headline-pill">Dogging Training Melbourne</div><div class="headline-pill">Dogman Ticket Melbourne</div><div class="headline-pill">DG Licence Course</div><div class="headline-pill">Reduced Prices</div><div class="headline-pill">Dogging Course Carrum Downs</div><div class="headline-pill">Dogging & Rigging Course</div><div class="headline-pill">Dogman License</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › dogging-dg-licence</span></span></div>
+          <div class="ad-headline">Dogging Training Melbourne · Dogman Ticket Melbourne · Reduced Prices</div>
+          <div class="ad-desc">Looking to get your Dogman License? You are in the right place. Accredited Course: CPCCLDG3001 | Licence to perform dogging | High risk work licence (DG).</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Dogging</span>
+            <span class="ad-tag ad-tag-state-vic">VIC · Carrum Downs</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-note">⚡</span> "Reduced Prices" headline needs verification — confirm this is accurate before leaving it active. "You are in the right place" opener is weak on Desc 1 — the stronger Melbourne ad above outclasses this variant.</div>
+      </div>
+
+      <div class="ad-card" data-course="Dogging">
+        <div class="headline-pills">
+          <div class="headline-pill">Dogging Training Sydney</div><div class="headline-pill">Dogman Ticket Sydney</div><div class="headline-pill">DG Licence Course</div><div class="headline-pill">HRWL - 5 Day Course</div><div class="headline-pill">Course Available In NSW</div><div class="headline-pill">Dogging Ticket</div><div class="headline-pill">Dogman Ticket Training</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › dogging-dg-licence</span></span></div>
+          <div class="ad-headline">Dogging Training · Dogging Training Sydney · Dogman Ticket Sydney</div>
+          <div class="ad-desc">Looking to get your dogging ticket? You are in the right place. Accredited Course: CPCCLDG3001 | Licence to perform dogging | High risk work licence (DG).</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Dogging</span>
+            <span class="ad-tag ad-tag-state-nsw">NSW · Sydney (⚠ Weakest)</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-warn">⚠ Weakest Dogging ad.</span> Generic "You are in the right place" opener — same as QLD variant. No specific suburb, no WorkSafe NSW reference, no hands-on claim. NSW Dogging had zero conversions in May. Rewrite this ad urgently, modelling it on the Melbourne version above.</div>
+      </div>
+
+      <div class="ad-card" data-course="Dogging">
+        <div class="headline-pills">
+          <div class="headline-pill">Dogging Training Brisbane</div><div class="headline-pill">Dogman Ticket Brisbane</div><div class="headline-pill">DG Licence Course</div><div class="headline-pill">5 Day Course</div><div class="headline-pill">Evening Training Available</div><div class="headline-pill">Dogging Ticket Brisbane</div><div class="headline-pill">Dogging Course Brisbane</div><div class="headline-pill">QLD High Risk Work Licence</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › dogging-dg-licence</span></span></div>
+          <div class="ad-headline">Dogging Training · Dogging Training Brisbane · Dogman Ticket Brisbane</div>
+          <div class="ad-desc">Looking to get your dogging ticket? You are in the right place. Accredited Course: CPCCLDG3001 | Licence to perform dogging | High risk work licence (DG).</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Dogging</span>
+            <span class="ad-tag ad-tag-state-qld">QLD · Brisbane</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-note">⚡</span> Brisbane-specific headlines are good. "Evening Training Available" is a strong hook for QLD. But Description 1 is the same generic opener as NSW — upgrade to the Melbourne-style specific copy and test CTR improvement.</div>
+      </div>
+
+      <!-- RIGGING ADS -->
+      <div class="ad-card" data-course="Rigging">
+        <div class="headline-pills">
+          <div class="headline-pill">Basic Rigging Licence</div><div class="headline-pill">All the Skills + Knowledge</div><div class="headline-pill">CPCCLRG3001 Course</div><div class="headline-pill">Rigging Training Melbourne</div><div class="headline-pill">Basic Rigging Course</div><div class="headline-pill">5 Day Course</div><div class="headline-pill">Rigging Course Victoria</div><div class="headline-pill">Hoist operations Course</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › basic-rigging-rb-licence</span></span></div>
+          <div class="ad-headline">Basic Rigging Licence · CPCCLRG3001 Course · Rigging Training Melbourne</div>
+          <div class="ad-desc">Licence to Perform Basic Rigging. This course covers all the skills and knowledge required. Prepare yourself for Rigging Jobs with our expert trainers | Kallibr Training (RTO 32365).</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Rigging</span>
+            <span class="ad-tag ad-tag-state-vic">VIC · Melbourne</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-good">✓</span> VIC-specific with Melbourne in headline. Course code prominent. Achieved $41 CPA in May — best Rigging result. Copy is working well here.</div>
+      </div>
+
+      <div class="ad-card" data-course="Rigging">
+        <div class="headline-pills">
+          <div class="headline-pill">Basic Rigging RB Licence</div><div class="headline-pill">Rigging Training Brisbane</div><div class="headline-pill">Basic Rigging Course</div><div class="headline-pill">CPCCLRG3001 Course</div><div class="headline-pill">5 Day Course</div><div class="headline-pill">High Risk Work License</div><div class="headline-pill">Hoist operations</div><div class="headline-pill">Rigging Ticket Training</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › basic-rigging-rb-licence</span></span></div>
+          <div class="ad-headline">Rigging Training · Basic Rigging RB Licence · Rigging Training Brisbane</div>
+          <div class="ad-desc">Get your Basic Rigging RB Licence with nationally recognised training from Kallibr. Prepare yourself for Rigging Jobs with our expert trainers | Kallibr Training (RTO 32365).</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Rigging</span>
+            <span class="ad-tag ad-tag-state-qld">QLD · Brisbane</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-good">✓</span> QLD-targeted. RB Licence callout is strong for searchers who know what they need. $74 CPA in May — solid performer.</div>
+      </div>
+
+      <div class="ad-card" data-course="Rigging">
+        <div class="headline-pills">
+          <div class="headline-pill">Rigging Training Sydney</div><div class="headline-pill">Basic Rigging Course</div><div class="headline-pill">CPCCLRG3001 Course</div><div class="headline-pill">5 Day Course</div><div class="headline-pill">High Risk Work License</div><div class="headline-pill">Hoist operations</div><div class="headline-pill">Basic Rigging Licence</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › basic-rigging-rb-licence</span></span></div>
+          <div class="ad-headline">Rigging Training · Rigging Training Sydney · Basic Rigging Course</div>
+          <div class="ad-desc">Get your Basic Rigging RB Licence with nationally recognised training from Kallibr. Prepare yourself for Rigging Jobs with our expert trainers | Kallibr Training (RTO 32365).</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Rigging</span>
+            <span class="ad-tag ad-tag-state-nsw">NSW · Sydney (⚠ $295 CPA)</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-warn">⚠</span> NSW Rigging Basic had $295 CPA in May. The ad copy itself is reasonable — but the $295 CPA suggests a deeper issue: wrong keywords, wrong landing page match, or NSW-specific intent mismatch. Ad copy alone won't fix this.</div>
+      </div>
+
+      <div class="ad-card" data-course="Rigging">
+        <div class="headline-pills">
+          <div class="headline-pill">Rigging Training Brisbane</div><div class="headline-pill">Intermediate Rigging Course</div><div class="headline-pill">5 Day Course</div><div class="headline-pill">Intermediate Rigging Licence</div><div class="headline-pill">Starts at $1686</div><div class="headline-pill">Rigging Training Courses</div><div class="headline-pill">Average 4.9/5 Star Reviews</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › intermediate-rigging-ra-licence</span></span></div>
+          <div class="ad-headline">Rigging Training · Rigging Training Brisbane · Intermediate Rigging Course</div>
+          <div class="ad-desc">Ready to take your rigging skills to the next level? You're in the right place. Kallibr Training (RTO 32365) - Get your intermediate level riggers ticket (RI) Book Now.</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Rigging</span>
+            <span class="ad-tag ad-tag-state-qld">QLD · Intermediate RI</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-note">⚡</span> Price callout "Starts at $1686" qualifies serious leads but reduces broad CTR. Test removing it vs keeping it — if conversion quality is high with fewer clicks, it's worth keeping. $84 CPA in May suggests it's working well.</div>
+      </div>
+
+      <div class="ad-card" data-course="Rigging">
+        <div class="headline-pills">
+          <div class="headline-pill">High Risk Work Licence</div><div class="headline-pill">Get Your HRWL Fast</div><div class="headline-pill">Multiple Locations</div><div class="headline-pill">WorkSafe Approved</div><div class="headline-pill">Enrol Now</div><div class="headline-pill">Crane & Rigging Training</div><div class="headline-pill">Dogging & Rigging Courses</div><div class="headline-pill">Practical, Hands-On Training</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › course-types › high-risk-work-licences</span></span></div>
+          <div class="ad-headline">High Risk Work Licence · Get Your HRWL Fast · WorkSafe Approved</div>
+          <div class="ad-desc">Kallibr Training offers nationally recognised rigging courses in Australia. Get Certified to Work with Rigging Equipment, Including Cranes, Hoists, and Safety Nets.</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Rigging</span>
+            <span class="ad-tag ad-tag-state-all">ALL STATES — Generic</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-warn">⚠ Generic — runs in all 3 states.</span> No location in any headline. Landing page goes to /course-types/high-risk-work-licences/ — not a specific course. This ad is likely causing poor Quality Scores when shown against location-specific competitor ads. Each state needs its own HRWL variant.</div>
+      </div>
+
+      <div class="ad-card" data-course="Rigging">
+        <div class="headline-pills">
+          <div class="headline-pill">Advanced Rigging Course</div><div class="headline-pill">Rigging Training Sydney</div><div class="headline-pill">CPCCLRG4001 Course</div><div class="headline-pill">Advanced Rigging Licence</div><div class="headline-pill">5 Day Course</div><div class="headline-pill">Advanced Rigging Ticket</div><div class="headline-pill">Accredited Rigging Licences</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › courses › intermediate-rigging-ri-licence</span></span></div>
+          <div class="ad-headline">Rigging Training · Rigging Training Sydney · Advanced Rigging Course</div>
+          <div class="ad-desc">Advanced rigging course qualifying you for complex, high-risk work in major industries. Kallibr Training (RTO 32365) - Get your Advanced level riggers ticket (RA) Book Now.</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">Rigging</span>
+            <span class="ad-tag ad-tag-state-nsw">NSW · Advanced RA</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-note">⚡</span> Note: this ad links to the RI licence URL but mentions RA (Advanced) content — possible URL mismatch. Verify the landing page actually contains Advanced Rigging (RA) content, not Intermediate (RI). A mismatch would hurt Quality Score significantly.</div>
+      </div>
+
+      <!-- CSQ AD -->
+      <div class="ad-card" data-course="CSQ">
+        <div class="headline-pills">
+          <div class="headline-pill">Funded Courses</div><div class="headline-pill">CSQ Funding Queensland</div><div class="headline-pill">Construction Skills Queensland</div><div class="headline-pill">CSQ Funded Courses</div><div class="headline-pill">High Risk Work Tickets</div><div class="headline-pill">Explore CSQ Funded Courses</div><div class="headline-pill">Kallibr Training | CSQ Funding</div><div class="headline-pill">CSQ Courses QLD</div>
+        </div>
+        <div class="ad-mock">
+          <div><span class="ad-badge">Ad</span><span class="ad-url">kallibr.com.au<span class="ad-url-path"> › course-types › csq-courses</span></span></div>
+          <div class="ad-headline">Funded Courses · CSQ Funding Queensland · Construction Skills Queensland</div>
+          <div class="ad-desc">Fast track your career – book a training course with Kallibr Training. Kallibr Training is approved for CSQ funding. Explore courses and eligibility today.</div>
+        </div>
+        <div class="ad-meta">
+          <div class="ad-meta-row">
+            <span class="ad-tag ad-tag-course">CSQ</span>
+            <span class="ad-tag ad-tag-state-qld">QLD Only — Funded Training</span>
+          </div>
+        </div>
+        <div class="ad-insight"><span class="insight-flag flag-good">✓ Well structured.</span> Headlines correctly front-load the funding angle. "Approved for CSQ funding" in description is a key trust signal. $101 CPA in May while scaling from $931 → $1,783 spend. Suggest adding a headline: "Save Up To 50% With CSQ" or similar to quantify the funding benefit.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Display Remarketing Note -->
+  <div class="section">
+    <div class="section-label">Display Remarketing Ads</div>
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px 24px;">
+      <div style="font-size:13px;color:var(--slate);line-height:1.8;">
+        There are <strong>4 active image ads</strong> and <strong>1 paused responsive display ad</strong> running in the Display Remarketing campaign. These are image-only formats — no headline/description copy is available in the report. These ads are shown to people who have previously visited kallibr.com.au as they browse other websites (YouTube, news sites, etc.).
+        <br><br>
+        The Display campaign spent <strong>$420/month</strong> across March and May and recorded <strong>zero meaningful conversions</strong> (0 in May, 1 in April at $439 CPA, 6 in March at $70 — the March result was from the now-paused responsive display ad). The image ads are not performing. Consider replacing with the responsive display ad format which Google's AI can optimise more effectively, or pause display entirely and reallocate the $20/day to VIC Courses.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function filterAds(course, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ad-card').forEach(card => {
+    if (course === 'all' || card.dataset.course === course) {
+      card.removeAttribute('data-hidden');
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+</script>
+// ═══════════════════════════════════════
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  const tabs = ['overview','march','april','may','ads'];
+  document.querySelectorAll('.tab')[tabs.indexOf(id)].classList.add('active');
+  if (id !== 'ads') setTimeout(() => renderCharts(id), 50);
+}
+
+// ═══════════════════════════════════════
+// COURSE TOGGLE
+// ═══════════════════════════════════════
+function toggleCourse(card) {
+  const detail = card.querySelector('.course-detail');
+  const label = card.querySelector('.course-expand');
+  const isOpen = detail.classList.contains('show');
+  detail.classList.toggle('show');
+  card.classList.toggle('expanded');
+  label.textContent = isOpen ? '▼ VIEW FULL DETAIL' : '▲ HIDE DETAIL';
+}
+
+// ═══════════════════════════════════════
+// CHART CONFIG
+// ═══════════════════════════════════════
+// Distinct, accessible colour palette — easy to differentiate
+const TEAL    = '#009f9c';   // Kallibr brand
+const NAVY    = '#1e40af';   // Deep blue
+const AMBER   = '#d97706';   // Warm amber (darkened for readability)
+const RED     = '#dc2626';   // Clear red
+const GREEN   = '#16a34a';   // Clear green
+const PURPLE  = '#7c3aed';   // Distinct purple
+const CORAL   = '#ea580c';   // Orange-coral
+const SLATE   = '#475569';   // Slate grey
+const TEAL2   = '#0891b2';   // Cyan-teal (distinct from brand teal)
+const LIME    = '#65a30d';   // Lime green
+
+// Course palette — high contrast, memorable
+const C_FORKLIFT = '#d97706'; // Amber — machinery, caution
+const C_DOGGING  = '#dc2626'; // Red — high risk
+const C_RIGGING  = '#1e40af'; // Navy — structural
+const C_CSQ      = '#16a34a'; // Green — funded/positive
+
+const DARK = '#0f1923';
+
+const cpaColor = (val) => val === 0 ? '#94a3b8' : val < 100 ? '#16a34a' : val < 150 ? '#d97706' : '#dc2626';
+
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.color = '#4a5568';
+
+// Bold legend plugin — applied globally
+const boldLegendPlugin = {
+  id: 'boldLegend',
+  beforeDraw(chart) {
+    // Legend font weight set via options below
+  }
+};
+
+const legendLabels = {
+  boxWidth: 14,
+  boxHeight: 14,
+  padding: 18,
+  font: { size: 12, weight: 'bold', family: "'DM Sans', sans-serif" },
+  color: '#1a202c',
+  usePointStyle: false
+};
+
+const tooltipDefaults = {
+  backgroundColor: '#1a202c',
+  titleColor: '#ffffff',
+  bodyColor: '#e2e8f0',
+  padding: 12,
+  titleFont: { size: 13, weight: 'bold' },
+  bodyFont: { size: 12 },
+  cornerRadius: 8,
+  displayColors: true,
+  boxPadding: 4
+};
+
+const chartInstances = {};
+
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+function makeBarChart(id, labels, datasets, options = {}) {
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  chartInstances[id] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: legendLabels },
+        tooltip: { ...tooltipDefaults, callbacks: { label: ctx => ` ${ctx.dataset.label}: ${options.currency ? '$' + ctx.parsed.y.toLocaleString() : ctx.parsed.y}` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' }, color: '#374151' } },
+        y: { grid: { color: '#e5e7eb', lineWidth: 1 }, ticks: { font: { size: 11 }, color: '#6b7280', callback: v => options.currency ? '$' + v.toLocaleString() : v }, border: { display: false } }
+      }
+    }
+  });
+}
+
+function makeLineChart(id, labels, datasets) {
+  destroyChart(id);
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  chartInstances[id] = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top', labels: legendLabels },
+        tooltip: { ...tooltipDefaults, callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y}` } }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 12, weight: '600' }, color: '#374151' } },
+        y: { grid: { color: '#e5e7eb', lineWidth: 1 }, ticks: { callback: v => '$' + v, color: '#6b7280' }, border: { display: false } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════
+// CHART DATA
+// ═══════════════════════════════════════
+function renderCharts(tab) {
+  const months = ['March', 'April', 'May'];
+  const courses = ['Forklift', 'Dogging', 'Rigging', 'CSQ'];
+
+  if (tab === 'overview') {
+    // Grouped bar — spend by course
+    makeBarChart('chart-spend-comparison',
+      courses,
+      [
+        { label: 'March', data: [2838, 7142, 4664, 931], backgroundColor: TEAL, borderRadius: 4 },
+        { label: 'April', data: [3268, 5184, 4867, 1312], backgroundColor: TEAL2, borderRadius: 4 },
+        { label: 'May', data: [4129, 2583, 6362, 1783], backgroundColor: '#00e5e2', borderRadius: 4 },
+      ],
+      { currency: true, grouped: true }
+    );
+    // Line — CPA trend
+    makeLineChart('chart-cpa-trend',
+      months,
+      [
+        { label: 'Forklift', data: [114, 90, 116], borderColor: AMBER, backgroundColor: AMBER+'33', fill: false, tension: 0.3, pointRadius: 5 },
+        { label: 'Dogging', data: [140, 139, 100], borderColor: RED, backgroundColor: RED+'33', fill: false, tension: 0.3, pointRadius: 5 },
+        { label: 'Rigging', data: [116, 110, 101], borderColor: BLUE, backgroundColor: BLUE+'33', fill: false, tension: 0.3, pointRadius: 5 },
+        { label: 'CSQ', data: [66, 101, 101], borderColor: GREEN, backgroundColor: GREEN+'33', fill: false, tension: 0.3, pointRadius: 5 },
+      ]
+    );
+    // NSW vs VIC Dogging
+    makeBarChart('chart-nsw-vic-dogging',
+      months,
+      [
+        { label: 'VIC Dogging CPA', data: [69, 49, 67], backgroundColor: GREEN, borderRadius: 4 },
+        { label: 'NSW Dogging CPA', data: [264, 545, 0], backgroundColor: RED, borderRadius: 4 },
+      ],
+      { currency: true }
+    );
+    // Account trend
+    destroyChart('chart-account-trend');
+    const ctx = document.getElementById('chart-account-trend');
+    if (ctx) {
+      chartInstances['chart-account-trend'] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [
+            { label: 'Spend ($)', data: [30533, 26911, 24145], backgroundColor: TEAL, borderRadius: 4, yAxisID: 'y' },
+            { label: 'Conversions', data: [284, 260, 224], backgroundColor: AMBER, borderRadius: 4, yAxisID: 'y2' },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }, tooltip: { backgroundColor: DARK, padding: 12 } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: '#e2e8f0' }, ticks: { callback: v => '$' + v.toLocaleString() }, position: 'left' },
+            y2: { grid: { display: false }, position: 'right', ticks: { font: { size: 11 } } }
+          }
+        }
+      });
+    }
+  }
+
+  const spendData = {
+    march:  { labels: ['Forklift QLD','Forklift NSW','Dogging VIC','Dogging QLD','Dogging NSW','Rigging QLD','Rigging NSW','Rigging VIC','CSQ'], data: [1201,1637,2122,902,4118,1704,1606,1354,931] },
+    april:  { labels: ['Forklift QLD','Forklift NSW','Forklift VIC','Dogging VIC','Dogging QLD','Dogging NSW','Rigging QLD','Rigging NSW','Rigging VIC','CSQ'], data: [2108,944,216,1411,1047,2726,2112,2016,782,1312] },
+    may:    { labels: ['Forklift QLD','Forklift NSW','Forklift VIC','Dogging VIC','Dogging QLD','Dogging NSW','Rigging QLD','Rigging NSW','Rigging VIC','CSQ'], data: [2443,1473,212,1039,971,574,3038,2387,936,1783] },
+  };
+  const cpaData = {
+    march:  { labels: ['Forklift QLD','Forklift NSW','Dogging VIC','Dogging QLD','Dogging NSW','Rigging QLD','Rigging NSW','Rigging VIC','CSQ'], data: [150,96,69,180,264,111,321,68,66] },
+    april:  { labels: ['Forklift QLD','Forklift NSW','Forklift VIC','Dogging VIC','Dogging QLD','Dogging NSW','Rigging QLD','Rigging NSW','Rigging VIC','CSQ'], data: [132,76,27,49,299,545,87,224,66,101] },
+    may:    { labels: ['Forklift QLD','Forklift NSW','Forklift VIC','Dogging VIC','Dogging QLD','Dogging NSW','Rigging QLD','Rigging NSW','Rigging VIC','CSQ'], data: [106,147,81,67,94,0,80,341,52,101] },
+  };
+
+  ['march','april','may'].forEach(m => {
+    if (tab === m) {
+      const s = spendData[m]; const c = cpaData[m];
+      makeBarChart(`chart-${m}-spend`, s.labels,
+        [{ label: 'Spend (AUD)', data: s.data, backgroundColor: s.data.map((_,i) => [TEAL,TEAL2,'#00c4c1',PURPLE,'#a78bfa','#c4b5fd',AMBER,'#fbbf24',GREEN,BLUE][i % 10]), borderRadius: 4 }],
+        { currency: true }
+      );
+      makeBarChart(`chart-${m}-cpa`, c.labels,
+        [{ label: 'CPA (AUD)', data: c.data, backgroundColor: c.data.map(v => cpaColor(v)), borderRadius: 4 }],
+        { currency: true }
+      );
+    }
+  });
+}
+
+// Init overview charts on load
+window.addEventListener('load', () => renderCharts('overview'));
+</script>
+</body>
+</html>
